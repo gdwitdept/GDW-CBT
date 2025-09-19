@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Galaxie Digital World Ltd - AI/ML CBT</title>
+<style>
+body { font-family: Arial, sans-serif; margin:0; padding:0; background:#e0f0ff; }
+.container { max-width:900px; margin:50px auto; background:#fffaf0; border-radius:12px; box-shadow:0 0 20px rgba(0,0,0,0.2); padding:30px; border-top:10px solid #003366; border-bottom:10px solid #b8860b;}
+h1,h2 { text-align:center; color:#003366; margin-bottom:20px;}
+h1 { font-size:28px; font-weight:bold; }
+h2 { font-size:22px; }
+.hidden { display:none; }
+input[type=text] { padding:10px; width:80%; margin:10px 0; border-radius:5px; border:1px solid #ccc; font-size:16px;}
+button { padding:12px 25px; margin-top:20px; background:#003366; color:white; border:none; border-radius:5px; cursor:pointer; font-size:16px;}
+button:hover { background:#002244; }
+label { display:block; margin:5px 0; cursor:pointer; }
+.timer { font-weight:bold; font-size:18px; color:#b8860b; text-align:right; margin-bottom:15px;}
+.question { margin-bottom:20px; padding:10px; border-bottom:1px solid #ccc; }
+.correct { color:green; font-weight:bold; }
+.wrong { color:red; font-weight:bold; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- LOGIN PAGE -->
+    <div id="loginPage">
+        <h1>Galaxie Digital World Ltd</h1>
+        <h2>Welcome! Please enter your name to start the CBT</h2>
+        <input type="text" id="username" placeholder="Enter your full name">
+        <br>
+        <button onclick="startQuiz()">Start</button>
+    </div>
+
+    <!-- QUIZ PAGE -->
+    <div id="quizPage" class="hidden">
+        <h2 id="welcomeUser"></h2>
+        <p><strong>Instructions:</strong> Each question carries 2 marks. Pick only one option per question.</p>
+        <div class="timer" id="timer">10:00</div>
+        <form id="quizForm">
+            <div id="questionsContainer"></div>
+            <button type="button" onclick="submitQuiz()">Submit</button>
+        </form>
+    </div>
+
+    <!-- RESULT PAGE -->
+    <div id="resultPage" class="hidden">
+        <h2>Results</h2>
+        <p id="scoreDisplay"></p>
+        <div id="reviewContainer"></div>
+    </div>
+
+</div>
+
+<script>
+let timerInterval;
+
+const questions = [
+{question:"Enter your name:", options:[], type:"name", answer:"any"},
+{question:"What does AI stand for?", options:["Artificial Intelligence","Automatic Input","Analog Interface","Advanced Integration"], type:"mcq", answer:"Artificial Intelligence"},
+{question:"Machine Learning is a subset of AI.", options:["True","False"], type:"tf", answer:"True"},
+{question:"Which is an example of a prompt in AI?", options:["Translate text","Run a Python script","Install software","Turn off computer"], type:"mcq", answer:"Translate text"},
+{question:"Supervised Learning uses labeled data.", options:["True","False"], type:"tf", answer:"True"},
+{question:"Which of the following is NOT an AI technique?", options:["Neural Networks","Decision Trees","Sorting Algorithm","Reinforcement Learning"], type:"mcq", answer:"Sorting Algorithm"},
+{question:"ChatGPT is an example of which AI model type?", options:["Generative Pre-trained Transformer","CNN","SVM","Decision Tree"], type:"mcq", answer:"Generative Pre-trained Transformer"},
+{question:"Unsupervised Learning requires labeled data.", options:["True","False"], type:"tf", answer:"False"},
+{question:"Which Python library is for Machine Learning?", options:["TensorFlow","HTML","CSS","SQL"], type:"mcq", answer:"TensorFlow"},
+{question:"AI can be applied in healthcare.", options:["True","False"], type:"tf", answer:"True"},
+{question:"Which ML algorithm is used for regression?", options:["Linear Regression","K-Means","Decision Tree","PCA"], type:"mcq", answer:"Linear Regression"},
+{question:"Reinforcement Learning uses rewards.", options:["True","False"], type:"tf", answer:"True"},
+{question:"Which AI technique is commonly used for image recognition?", options:["CNN","Logistic Regression","Decision Trees","KNN"], type:"mcq", answer:"CNN"},
+{question:"Natural Language Processing deals with human language.", options:["True","False"], type:"tf", answer:"True"},
+{question:"Which of these is a generative AI model?", options:["GPT-4","Random Forest","K-Means","SVM"], type:"mcq", answer:"GPT-4"},
+{question:"Deep Learning uses multiple layers in neural networks.", options:["True","False"], type:"tf", answer:"True"},
+{question:"Which algorithm is commonly used for classification?", options:["SVM","K-Means","Linear Regression","PCA"], type:"mcq", answer:"SVM"},
+{question:"AI can be applied in autonomous vehicles.", options:["True","False"], type:"tf", answer:"True"},
+{question:"Which library is used for AI in Python?", options:["PyTorch","HTML","CSS","SQL"], type:"mcq", answer:"PyTorch"},
+{question:"Clustering is a type of unsupervised learning.", options:["True","False"], type:"tf", answer:"True"},
+{question:"Which algorithm reduces dimensions of data?", options:["PCA","Linear Regression","Decision Tree","K-Means"], type:"mcq", answer:"PCA"},
+{question:"AI can detect fraudulent transactions.", options:["True","False"], type:"tf", answer:"True"},
+{question:"Which is an example of reinforcement learning?", options:["Training a robot","Linear Regression","Decision Trees","K-Means"], type:"mcq", answer:"Training a robot"},
+{question:"Supervised learning requires labeled datasets.", options:["True","False"], type:"tf", answer:"True"},
+{question:"Which AI model is used for text generation?", options:["GPT","SVM","K-Means","Random Forest"], type:"mcq", answer:"GPT"},
+{question:"Unsupervised learning can find patterns without labeled data.", options:["True","False"], type:"tf", answer:"True"},
+{question:"Which ML algorithm is used for clustering?", options:["K-Means","Linear Regression","SVM","Decision Tree"], type:"mcq", answer:"K-Means"}
+];
+
+function startQuiz() {
+    const username = document.getElementById("username").value.trim();
+    if(!username){ alert("Please enter your name to start!"); return; }
+    document.getElementById("loginPage").classList.add("hidden");
+    document.getElementById("quizPage").classList.remove("hidden");
+    document.getElementById("welcomeUser").innerText = `Welcome, ${username}!`;
+    loadQuestions();
+    startTimer(10*60); // 10 minutes
+}
+
+function loadQuestions() {
+    const container = document.getElementById("questionsContainer");
+    container.innerHTML = "";
+    for(let i=1;i<questions.length;i++){
+        const q = questions[i];
+        const div = document.createElement("div");
+        div.classList.add("question");
+        let html = `<p><strong>Q${i}:</strong> ${q.question}</p>`;
+        if(q.type==="mcq" || q.type==="tf"){
+            q.options.forEach(opt=>{
+                html += `<label><input type="radio" name="q${i}" value="${opt}"> ${opt}</label>`;
+            });
+        }
+        div.innerHTML = html;
+        container.appendChild(div);
+    }
+}
+
+function startTimer(duration) {
+    let timer = duration, minutes, seconds;
+    const display = document.getElementById("timer");
+    timerInterval = setInterval(function(){
+        minutes = parseInt(timer / 60,10);
+        seconds = parseInt(timer % 60,10);
+        minutes = minutes<10?"0"+minutes:minutes;
+        seconds = seconds<10?"0"+seconds:seconds;
+        display.textContent = `${minutes}:${seconds}`;
+        if(--timer < 0){
+            clearInterval(timerInterval);
+            submitQuiz();
+        }
+    },1000);
+}
+
+function submitQuiz() {
+    clearInterval(timerInterval);
+    let score = 0;
+    const reviewContainer = document.getElementById("reviewContainer");
+    reviewContainer.innerHTML = "";
+    for(let i=1;i<questions.length;i++){
+        const q = questions[i];
+        const selected = document.querySelector(`input[name=q${i}]:checked`);
+        let userAnswer = selected ? selected.value : "";
+        let correctText = `<span class="correct">Correct: ${q.answer}</span>`;
+        if(q.type==="name") continue;
+        if(userAnswer === q.answer) score += 2;
+        else reviewContainer.innerHTML += `<p>Q${i}: ${q.question} - Your answer: <span class="wrong">${userAnswer || "Unanswered"}</span> | ${correctText}</p>`;
+    }
+    document.getElementById("scoreDisplay").innerText = `Score: ${score} / 50 (${(score/50*100).toFixed(2)}%)`;
+    document.getElementById("quizPage").classList.add("hidden");
+    document.getElementById("resultPage").classList.remove("hidden");
+}
+</script>
+
+</body>
+</html>
